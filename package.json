@@ -1,6 +1,6 @@
 {
   "name": "react-native-vunun-notification",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "react native notification",
   "main": "index.js",
   "scripts": {
@@ -24,6 +24,6 @@
   "rnpm": {
     "android": {
       "packageInstance": "new ReactNativePushNotificationPackage(this)"
-    },
+    }
   }
 }
