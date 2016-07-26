@@ -1,18 +1,20 @@
 package com.dieam.reactnativepushnotification.modules;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
 
+import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
@@ -20,6 +22,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
 import org.json.*;
 
 import android.content.Context;
@@ -30,16 +33,14 @@ import me.leolin.shortcutbadger.ShortcutBadger;
 
 public class RNPushNotification extends ReactContextBaseJavaModule {
     private ReactContext mReactContext;
-    private Activity mActivity;
     private RNPushNotificationHelper mRNPushNotificationHelper;
     private int mBadgerNumber = 0;
 
-    public RNPushNotification(ReactApplicationContext reactContext, Activity activity) {
+    public RNPushNotification(ReactApplicationContext reactContext) {
         super(reactContext);
 
-        mActivity = activity;
         mReactContext = reactContext;
-        mRNPushNotificationHelper = new RNPushNotificationHelper(activity.getApplication(), reactContext);
+        mRNPushNotificationHelper = new RNPushNotificationHelper((Application) reactContext.getApplicationContext());
         registerNotificationsRegistration();
         registerNotificationsReceiveNotification();
     }
@@ -53,20 +54,11 @@ public class RNPushNotification extends ReactContextBaseJavaModule {
     public Map<String, Object> getConstants() {
         final Map<String, Object> constants = new HashMap<>();
 
-        Intent intent = mActivity.getIntent();
-
-        Bundle bundle = intent.getBundleExtra("notification");
-        if ( bundle != null ) {
-            bundle.putBoolean("foreground", false);
-            String bundleString = convertJSON(bundle);
-            constants.put("initialNotification", bundleString);
-        }
-
         return constants;
     }
 
     private void sendEvent(String eventName, Object params) {
-        if ( mReactContext.hasActiveCatalystInstance() ) {
+        if (mReactContext.hasActiveCatalystInstance()) {
             mReactContext
                     .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                     .emit(eventName, params);
@@ -74,7 +66,7 @@ public class RNPushNotification extends ReactContextBaseJavaModule {
     }
 
     public void newIntent(Intent intent) {
-        if ( intent.hasExtra("notification") ) {
+        if (intent.hasExtra("notification")) {
             Bundle bundle = intent.getBundleExtra("notification");
             bundle.putBoolean("foreground", false);
             intent.putExtra("notification", bundle);
@@ -126,7 +118,7 @@ public class RNPushNotification extends ReactContextBaseJavaModule {
                 } else {
                     json.put(key, bundle.get(key));
                 }
-            } catch(JSONException e) {
+            } catch (JSONException e) {
                 return null;
             }
         }
@@ -156,6 +148,24 @@ public class RNPushNotification extends ReactContextBaseJavaModule {
     public void scheduleLocalNotification(ReadableMap details) {
         Bundle bundle = Arguments.toBundle(details);
         mRNPushNotificationHelper.sendNotificationScheduled(bundle);
+    }
+
+    @ReactMethod
+    public void getInitialNotification(Promise promise) {
+        WritableMap params = Arguments.createMap();
+
+//        Activity activity = getCurrentActivity();
+//
+//        if (activity != null) {
+//            Intent intent = activity.getIntent();
+//            Bundle bundle = intent.getBundleExtra("notification");
+//            if (bundle != null) {
+//                bundle.putBoolean("foreground", false);
+//                String bundleString = convertJSON(bundle);
+//                params.putString("dataJSON", bundleString);
+//            }
+//        }
+        promise.resolve(params);
     }
 
     @ReactMethod
